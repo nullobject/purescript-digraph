@@ -1,0 +1,28 @@
+{
+  "name": "purescript-digraph",
+  "authors": [
+    "Josh Bassett <josh.bassett@gmail.com>"
+  ],
+  "description": "A directed graph library for PureScript.",
+  "license": "MIT",
+  "homepage": "https://github.com/nullobject/purescript-digraph",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/nullobject/purescript-digraph"
+  },
+  "ignore": [
+    "**/.*",
+    "bower_components",
+    "output",
+    "test"
+  ],
+  "dependencies": {
+    "purescript-maps": "^0.5.7",
+    "purescript-lists": "^0.7.10",
+    "purescript-sets": "^0.5.7",
+    "purescript-pqueue": "^0.1.0"
+  },
+  "devDependencies": {
+    "purescript-spec": "^0.7.2"
+  }
+}
