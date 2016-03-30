@@ -16,19 +16,20 @@ module Data.Graph
 
 import Prelude
 
-import Data.Foldable as F
+import Data.Foldable (elem, foldl) as F
 import Data.List (List(..), (\\))
-import Data.List as L
+import Data.List (filter, reverse, singleton, snoc) as L
 import Data.Map (Map)
-import Data.Map as M
+import Data.Map (alter, empty, insert, keys, lookup, member, singleton, size, toList) as M
 import Data.Maybe (Maybe(..), maybe)
 import Data.Maybe.Unsafe (fromJust)
 import Data.Set (Set)
-import Data.Set as S
+import Data.Set (empty, insert, member) as S
 import Data.Tuple (Tuple(..), fst, snd)
 
 import Data.PQueue (PQueue)
-import Data.PQueue as PQ
+import Data.PQueue (insert, isEmpty, singleton) as PQ
+import Data.PQueue.Partial (head, tail) as PQ
 
 infixr 6 Cons as :
 
@@ -100,7 +101,7 @@ shortestPath' p start g = go (PQ.singleton zero start) S.empty (M.singleton star
     go fringe visited labels edges =
       if PQ.isEmpty fringe then Nothing
       else
-        let smallest = PQ.head' fringe
+        let smallest = PQ.head fringe
             cost = fst smallest
             vertex = snd smallest
             fringe' = PQ.tail fringe
