@@ -2,24 +2,23 @@ language: node_js
 sudo: false
 node_js: 5
 cache:
+  apt: true
   directories:
     - $HOME/.cache/bower
-    - output
-env:
-  - PATH=$HOME/purescript:$PATH
 install:
-  - TAG=$(wget -q -O - https://github.com/purescript/purescript/releases/latest --server-response --max-redirect 0 2>&1 | sed -n -e 's/.*Location:.*tag\///p')
-  - wget -O $HOME/purescript.tar.gz https://github.com/purescript/purescript/releases/download/$TAG/linux64.tar.gz
-  - tar -xvf $HOME/purescript.tar.gz -C $HOME/
-  - chmod a+x $HOME/purescript
+  - mkdir -p ~/bin
+  - export TAG=$(wget -q -O - https://github.com/purescript/purescript/releases/latest --server-response --max-redirect 0 2>&1 | sed -n -e 's/.*Location:.*tag\///p')
+  - travis_retry curl -L https://github.com/purescript/purescript/releases/download/$TAG/linux64.tar.gz | tar -xz -C ~/bin --wildcards '*/psc*' --strip-components=1
+  - chmod -R a+x ~/bin
   - npm install -g bower pulp
   - bower install
-script: pulp test
+script:
+  - pulp test
 after_success:
-- >-
-  test $TRAVIS_TAG &&
-  psc-publish > /tmp/pursuit.json &&
-  curl -X POST https://pursuit.purescript.org/packages \
-    -d @/tmp/pursuit.json \
-    -H 'Accept: application/json' \
-    -H "Authorization: token ${GITHUB_TOKEN}"
+  - >-
+    test $TRAVIS_TAG &&
+    psc-publish > /tmp/pursuit.json &&
+    curl -X POST https://pursuit.purescript.org/packages \
+      -d @/tmp/pursuit.json \
+      -H 'Accept: application/json' \
+      -H "Authorization: token ${GITHUB_TOKEN}"
