@@ -23,6 +23,6 @@
     "purescript-pqueue": "^0.2.0"
   },
   "devDependencies": {
-    "purescript-spec": "^0.7.2"
+    "purescript-spec": "^0.7.4"
   }
 }
