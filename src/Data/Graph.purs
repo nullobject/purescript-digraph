@@ -7,6 +7,7 @@ module Data.Graph
   , elem
   , adjacent
   , adjacent'
+  , isAdjacent
   , weight
   , shortestPath
   , shortestPath'
@@ -79,6 +80,10 @@ adjacent vertex (Graph adjacencyMap) = maybe Nil M.keys (M.lookup vertex adjacen
 -- Get the adjacent vertices and associated costs of a vertex.
 adjacent' :: forall a w. (Ord a) => a -> Graph a w -> List (Tuple a w)
 adjacent' vertex (Graph adjacencyMap) = maybe Nil M.toList (M.lookup vertex adjacencyMap)
+
+-- Test whether two vertices are adjacent in a graph.
+isAdjacent :: forall a w. (Ord a) => a -> a -> Graph a w -> Boolean
+isAdjacent a b (Graph adjacencyMap) = maybe false (M.member b) (M.lookup a adjacencyMap)
 
 -- Get the weight of the edge between two vertices.
 weight :: forall a w. (Ord a) => a -> a -> Graph a w -> Maybe w

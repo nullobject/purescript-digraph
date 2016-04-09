@@ -54,6 +54,13 @@ graphSpec = describe "Graph" do
     it "returns an empty list given a vertex not in the graph" do
       adjacent 8 g `shouldEqual` fromFoldable []
 
+  describe "isAdjacent" do
+    it "returns true if the vertices are adjacent" do
+      isAdjacent 1 2 g `shouldEqual` true
+
+    it "returns false if the vertices are not adjacent" do
+      isAdjacent 1 4 g `shouldEqual` false
+
   describe "weight" do
     it "returns the weight of the edge between the vertices" do
       weight 1 2 g `shouldEqual` Just 1
