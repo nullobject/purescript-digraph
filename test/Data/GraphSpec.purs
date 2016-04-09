@@ -1,4 +1,4 @@
-module Test.Data.Graph where
+module Test.Data.GraphSpec where
 
 import Prelude (Unit, bind, ($))
 
