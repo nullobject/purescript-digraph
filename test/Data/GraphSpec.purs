@@ -20,7 +20,8 @@ graphSpec = describe "Graph" do
     , Tuple 4 (fromFoldable [Tuple 2 3, Tuple 3 4])
     , Tuple 5 (fromFoldable [Tuple 6 1])
     , Tuple 6 (fromFoldable [Tuple 5 1])
-    , Tuple 7 (fromFoldable []) ]
+    , Tuple 7 (fromFoldable [])
+    ]
 
   let g = graph edges
 
