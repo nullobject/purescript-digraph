@@ -1,7 +1,7 @@
 module Data.Graph
   ( AdjacencyList
   , Graph
-  , graph
+  , fromAdjacencyList
   , vertices
   , size
   , elem
@@ -152,5 +152,5 @@ connectedComponents g =
       go (v:vs) gs =
         let vs' = traverse v g
             as = map (\a -> Tuple a (adjacent' a g)) vs'
-        in go (vs \\ vs') (L.snoc gs (graph as))
+        in go (vs \\ vs') (L.snoc gs (fromAdjacencyList as))
   in go (vertices g) Nil
