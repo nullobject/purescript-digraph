@@ -23,6 +23,7 @@ import Data.List (filter, reverse, singleton, snoc) as L
 import Data.Map (Map)
 import Data.Map (alter, empty, insert, keys, lookup, member, singleton, size, toList) as M
 import Data.Maybe (Maybe(..), maybe, fromJust)
+import Data.Newtype (class Newtype, wrap, unwrap)
 import Data.Set (Set)
 import Data.Set (empty, insert, member) as S
 import Data.Tuple (Tuple(..), fst, snd)
@@ -36,14 +37,16 @@ infixr 6 Cons as :
 
 type AdjacencyList a w = List (Tuple a (List (Tuple a w)))
 
-data Graph a w = Graph (Map a (Map a w))
+newtype Graph a w = Graph (Map a (Map a w))
+
+derive instance newtypeGraph :: Newtype (Graph a w) _
 
 instance showGraph :: (Show a, Show w) => Show (Graph a w) where
-  show (Graph adjacencyMap) = "graph: " <> show adjacencyMap
+  show = show <<< unwrap
 
 -- Create a graph from an adjacency list.
-graph :: forall a w. (Ord a) => AdjacencyList a w -> Graph a w
-graph as = Graph adjacencyMap
+fromAdjacencyList :: forall a w. (Ord a) => AdjacencyList a w -> Graph a w
+fromAdjacencyList as = wrap adjacencyMap
   where
     -- Create an empty adjacency map for the vertices.
     emptyAdjacencyMap = F.foldl (\m (Tuple a _) -> M.insert a M.empty m) M.empty as
@@ -63,31 +66,31 @@ graph as = Graph adjacencyMap
 
 -- Get the vertices of a graph.
 vertices :: forall a w. Graph a w -> List a
-vertices (Graph adjacencyMap) = M.keys adjacencyMap
+vertices = M.keys <<< unwrap
 
 -- Get the number of vertices in a graph.
 size :: forall a w. Graph a w -> Int
-size (Graph adjacencyMap) = M.size adjacencyMap
+size = M.size <<< unwrap
 
 -- Test whether a vertex is in a graph.
 elem :: forall a w. (Ord a) => a -> Graph a w -> Boolean
-elem vertex (Graph adjacencyMap) = M.member vertex adjacencyMap
+elem vertex = M.member vertex <<< unwrap
 
 -- Get the adjacent vertices of a vertex.
 adjacent :: forall a w. (Ord a) => a -> Graph a w -> List a
-adjacent vertex (Graph adjacencyMap) = maybe Nil M.keys (M.lookup vertex adjacencyMap)
+adjacent vertex graph = maybe Nil M.keys (M.lookup vertex (unwrap graph))
 
 -- Get the adjacent vertices and associated costs of a vertex.
 adjacent' :: forall a w. (Ord a) => a -> Graph a w -> List (Tuple a w)
-adjacent' vertex (Graph adjacencyMap) = maybe Nil M.toList (M.lookup vertex adjacencyMap)
+adjacent' vertex graph = maybe Nil M.toList (M.lookup vertex (unwrap graph))
 
 -- Test whether two vertices are adjacent in a graph.
 isAdjacent :: forall a w. (Ord a) => a -> a -> Graph a w -> Boolean
-isAdjacent a b (Graph adjacencyMap) = maybe false (M.member b) (M.lookup a adjacencyMap)
+isAdjacent a b graph = maybe false (M.member b) (M.lookup a (unwrap graph))
 
 -- Get the weight of the edge between two vertices.
 weight :: forall a w. (Ord a) => a -> a -> Graph a w -> Maybe w
-weight from to (Graph adjacencyMap) = maybe Nothing (M.lookup to) (M.lookup from adjacencyMap)
+weight from to graph = maybe Nothing (M.lookup to) (M.lookup from (unwrap graph))
 
 -- Get the shortest path between two vertices.
 shortestPath :: forall a w. (Ord a, Ord w, Semiring w) => a -> a -> Graph a w -> Maybe (List a)

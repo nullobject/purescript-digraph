@@ -19,6 +19,7 @@
   "dependencies": {
     "purescript-maps": "^2.0.2",
     "purescript-lists": "^3.2.1",
+    "purescript-newtype": "^1.1.0",
     "purescript-sets": "^2.0.0",
     "purescript-pqueue": "^0.4.0"
   },
