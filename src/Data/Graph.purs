@@ -22,15 +22,15 @@ import Data.List (List(..), (\\))
 import Data.List (filter, reverse, singleton, snoc) as L
 import Data.Map (Map)
 import Data.Map (alter, empty, insert, keys, lookup, member, singleton, size, toList) as M
-import Data.Maybe (Maybe(..), maybe)
-import Data.Maybe.Unsafe (fromJust)
+import Data.Maybe (Maybe(..), maybe, fromJust)
 import Data.Set (Set)
 import Data.Set (empty, insert, member) as S
 import Data.Tuple (Tuple(..), fst, snd)
+import Partial.Unsafe (unsafePartial)
 
 import Data.PQueue (PQueue)
 import Data.PQueue (insert, isEmpty, singleton) as PQ
-import Data.PQueue.Partial (head, tail) as PQ
+import Data.PQueue.Partial (head, tail) as PPQ
 
 infixr 6 Cons as :
 
@@ -39,7 +39,7 @@ type AdjacencyList a w = List (Tuple a (List (Tuple a w)))
 data Graph a w = Graph (Map a (Map a w))
 
 instance showGraph :: (Show a, Show w) => Show (Graph a w) where
-  show (Graph adjacencyMap) = "graph: " ++ show adjacencyMap
+  show (Graph adjacencyMap) = "graph: " <> show adjacencyMap
 
 -- Create a graph from an adjacency list.
 graph :: forall a w. (Ord a) => AdjacencyList a w -> Graph a w
@@ -106,10 +106,10 @@ shortestPath' p start g = go (PQ.singleton zero start) S.empty (M.singleton star
     go fringe visited labels edges =
       if PQ.isEmpty fringe then Nothing
       else
-        let smallest = PQ.head fringe
+        let smallest = unsafePartial $ PPQ.head fringe
             cost = fst smallest
             vertex = snd smallest
-            fringe' = PQ.tail fringe
+            fringe' = unsafePartial $ PPQ.tail fringe
             visited' = S.insert vertex visited
             labels' = F.foldl (\a (Tuple v c) -> M.insert v c a) labels successors
             successors = L.filter isSuccessor $ successorsAndCosts vertex cost
@@ -128,11 +128,11 @@ shortestPath' p start g = go (PQ.singleton zero start) S.empty (M.singleton star
     findPath vertex edges
       | M.member vertex edges =
         let vertex' = lookup' vertex edges
-        in (findPath vertex' edges) ++ L.singleton vertex
+        in (findPath vertex' edges) <> L.singleton vertex
       | otherwise = L.singleton vertex
 
     lookup' :: forall k v. (Ord k) => k -> Map k v -> v
-    lookup' k m = fromJust $ M.lookup k m
+    lookup' k m = unsafePartial $ fromJust $ M.lookup k m
 
 -- Perform a depth-frist traversal of a graph starting at a given node.
 traverse :: forall a w. (Ord a) => a -> Graph a w -> List a
@@ -141,7 +141,7 @@ traverse from g
     let go Nil path = path
         go (v:vs) path
           | F.elem v path = go vs path
-          | otherwise = go (adjacent v g ++ vs) (v:path)
+          | otherwise = go (adjacent v g <> vs) (v:path)
     in L.reverse $ go (L.singleton from) Nil
   | otherwise = Nil
 
@@ -151,6 +151,6 @@ connectedComponents g =
   let go Nil gs = gs
       go (v:vs) gs =
         let vs' = traverse v g
-            as = map (\v -> Tuple v (adjacent' v g)) vs'
+            as = map (\a -> Tuple a (adjacent' a g)) vs'
         in go (vs \\ vs') (L.snoc gs (graph as))
   in go (vertices g) Nil

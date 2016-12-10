@@ -3,9 +3,9 @@ module Test.Data.GraphSpec where
 import Prelude (Unit, bind, ($))
 
 import Data.List (fromFoldable, (!!))
-import Data.Maybe (Maybe(..))
-import Data.Maybe.Unsafe (fromJust)
+import Data.Maybe (Maybe(..), fromJust)
 import Data.Tuple (Tuple(..))
+import Partial.Unsafe (unsafePartial)
 import Test.Spec (Spec, describe, it)
 import Test.Spec.Assertions (shouldEqual)
 
@@ -102,6 +102,6 @@ graphSpec = describe "Graph" do
   describe "connectedComponents" do
     it "returns the connected components of the graph" do
       let components = connectedComponents g
-      vertices (fromJust $ components !! 0) `shouldEqual` fromFoldable [1, 2, 3, 4]
-      vertices (fromJust $ components !! 1) `shouldEqual` fromFoldable [5, 6]
-      vertices (fromJust $ components !! 2) `shouldEqual` fromFoldable [7]
+      vertices (unsafePartial $ fromJust $ components !! 0) `shouldEqual` fromFoldable [1, 2, 3, 4]
+      vertices (unsafePartial $ fromJust $ components !! 1) `shouldEqual` fromFoldable [5, 6]
+      vertices (unsafePartial $ fromJust $ components !! 2) `shouldEqual` fromFoldable [7]
