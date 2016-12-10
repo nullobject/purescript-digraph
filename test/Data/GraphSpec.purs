@@ -1,6 +1,6 @@
 module Test.Data.GraphSpec where
 
-import Prelude (Unit, bind, ($))
+import Prelude
 
 import Data.List (fromFoldable, (!!))
 import Data.Maybe (Maybe(..), fromJust)
