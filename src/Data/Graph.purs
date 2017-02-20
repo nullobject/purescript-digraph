@@ -36,11 +36,11 @@ import Data.PQueue.Partial (head, tail) as PPQ
 infixr 6 Cons as :
 
 -- | `Graph a w` represents a graph of vertices of type `a` connected by edges
--- | a weight of type `w`.
+-- | with a weight of type `w`.
 newtype Graph a w = Graph (Map a (Map a w))
 
--- | `AdjacencyList a w` is a type alias for a `List` of vertices of type `a`
--- | with a list of adjacent vertices connected with edges of type `w`.
+-- | `AdjacencyList a w` represents a `List` of vertices of type `a` with a
+-- | list of adjacent vertices connected with edges of type `w`.
 type AdjacencyList a w = List (Tuple a (List (Tuple a w)))
 
 derive instance newtypeGraph :: Newtype (Graph a w) _
@@ -109,7 +109,7 @@ shortestPath' :: forall a w. (Ord a, Ord w, Semiring w) => (a -> Boolean) -> a -
 shortestPath' p start g = go (PQ.singleton zero start) S.empty (M.singleton start zero) M.empty
   where
     go :: PQueue w a     -- priority queue of fringe vertices
-       -> Set a          -- set of visited nodes
+       -> Set a          -- set of visited vertices
        -> Map a w        -- map from vertices to costs
        -> Map a a        -- map from vertices to adjacent vertices
        -> Maybe (List a) -- shortest path
@@ -144,8 +144,8 @@ shortestPath' p start g = go (PQ.singleton zero start) S.empty (M.singleton star
     lookup' :: forall k v. (Ord k) => k -> Map k v -> v
     lookup' k m = unsafePartial $ fromJust $ M.lookup k m
 
--- | Perform a depth-frist traversal of a graph starting at a given node.
--- | Returns a `List` of the visited nodeds.
+-- | Perform a depth-frist traversal of a graph from a starting vertex.
+-- | Returns a `List` of the visited vertices.
 traverse :: forall a w. (Ord a) => a -> Graph a w -> List a
 traverse from g
   | elem from g =
