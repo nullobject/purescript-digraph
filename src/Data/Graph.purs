@@ -35,16 +35,20 @@ import Data.PQueue.Partial (head, tail) as PPQ
 
 infixr 6 Cons as :
 
-type AdjacencyList a w = List (Tuple a (List (Tuple a w)))
-
+-- | `Graph a w` represents a graph of vertices of type `a` connected by edges
+-- | a weight of type `w`.
 newtype Graph a w = Graph (Map a (Map a w))
+
+-- | `AdjacencyList a w` is a type alias for a `List` of vertices of type `a`
+-- | with a list of adjacent vertices connected with edges of type `w`.
+type AdjacencyList a w = List (Tuple a (List (Tuple a w)))
 
 derive instance newtypeGraph :: Newtype (Graph a w) _
 
 instance showGraph :: (Show a, Show w) => Show (Graph a w) where
   show = show <<< unwrap
 
--- Create a graph from an adjacency list.
+-- | Create a graph from an adjacency list.
 fromAdjacencyList :: forall a w. (Ord a) => AdjacencyList a w -> Graph a w
 fromAdjacencyList as = wrap adjacencyMap
   where
@@ -64,40 +68,43 @@ fromAdjacencyList as = wrap adjacencyMap
     upsert a w Nothing = Just (M.singleton a w)
     upsert a w (Just es) = Just (M.insert a w es)
 
--- Get the vertices of a graph.
+-- | Get the vertices of a graph.
 vertices :: forall a w. Graph a w -> List a
 vertices = M.keys <<< unwrap
 
--- Get the number of vertices in a graph.
+-- | Get the number of vertices in a graph.
 size :: forall a w. Graph a w -> Int
 size = M.size <<< unwrap
 
--- Test whether a vertex is in a graph.
+-- | Test whether a vertex is in a graph.
 elem :: forall a w. (Ord a) => a -> Graph a w -> Boolean
 elem vertex = M.member vertex <<< unwrap
 
--- Get the adjacent vertices of a vertex.
+-- | Get the adjacent vertices of a vertex.
 adjacent :: forall a w. (Ord a) => a -> Graph a w -> List a
 adjacent vertex graph = maybe Nil M.keys (M.lookup vertex (unwrap graph))
 
--- Get the adjacent vertices and associated costs of a vertex.
+-- | Get the adjacent vertices and associated costs of a vertex.
 adjacent' :: forall a w. (Ord a) => a -> Graph a w -> List (Tuple a w)
 adjacent' vertex graph = maybe Nil M.toList (M.lookup vertex (unwrap graph))
 
--- Test whether two vertices are adjacent in a graph.
+-- | Test whether two vertices are adjacent in a graph.
 isAdjacent :: forall a w. (Ord a) => a -> a -> Graph a w -> Boolean
 isAdjacent a b graph = maybe false (M.member b) (M.lookup a (unwrap graph))
 
--- Get the weight of the edge between two vertices.
+-- | Get the weight of the edge between two vertices. Returns `Nothing` if no
+-- | edge exists between the vertices.
 weight :: forall a w. (Ord a) => a -> a -> Graph a w -> Maybe w
 weight from to graph = maybe Nothing (M.lookup to) (M.lookup from (unwrap graph))
 
--- Get the shortest path between two vertices.
+-- | Get the shortest path between two vertices. Returns `Nothing` if no path
+-- | exists between the vertices.
 shortestPath :: forall a w. (Ord a, Ord w, Semiring w) => a -> a -> Graph a w -> Maybe (List a)
 shortestPath from to = shortestPath' (_ == to) from
 
--- Get the shortest path from a starting vertex to a vertex that satisifes a
--- predicate function.
+-- | Get the shortest path from a starting vertex to a vertex that satisifes a
+-- | predicate function. Returns `Nothing` if no path exists between the
+-- | vertices.
 shortestPath' :: forall a w. (Ord a, Ord w, Semiring w) => (a -> Boolean) -> a -> Graph a w -> Maybe (List a)
 shortestPath' p start g = go (PQ.singleton zero start) S.empty (M.singleton start zero) M.empty
   where
@@ -137,7 +144,8 @@ shortestPath' p start g = go (PQ.singleton zero start) S.empty (M.singleton star
     lookup' :: forall k v. (Ord k) => k -> Map k v -> v
     lookup' k m = unsafePartial $ fromJust $ M.lookup k m
 
--- Perform a depth-frist traversal of a graph starting at a given node.
+-- | Perform a depth-frist traversal of a graph starting at a given node.
+-- | Returns a `List` of the visited nodeds.
 traverse :: forall a w. (Ord a) => a -> Graph a w -> List a
 traverse from g
   | elem from g =
@@ -148,7 +156,8 @@ traverse from g
     in L.reverse $ go (L.singleton from) Nil
   | otherwise = Nil
 
--- Get the strongly connected components of a graph.
+-- | Get the strongly connected components of a graph. Returns a `List` of
+-- | connected subgraphs.
 connectedComponents :: forall a w. (Ord a) => Graph a w -> List (Graph a w)
 connectedComponents g =
   let go Nil gs = gs
