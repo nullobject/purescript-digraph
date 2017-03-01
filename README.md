@@ -8,7 +8,7 @@ A directed graph library for PureScript.
 
 ![Graph](https://raw.githubusercontent.com/nullobject/purescript-digraph/master/images/graph.png)
 
-## Adjacency list
+### Adjacency list
 
 The directed graph pictured above can be represented with an `AdjacencyList`.
 An adjacency list is a list of tuples that contain a vertex and a list of edges
