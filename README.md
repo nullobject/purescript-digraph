@@ -6,7 +6,7 @@ A directed graph library for PureScript.
 
 ## Examples
 
-![Graph](/images/graph.png)
+![Graph](https://raw.githubusercontent.com/nullobject/purescript-digraph/master/images/graph.png)
 
 ## Adjacency list
 
@@ -103,9 +103,8 @@ connectedComponents graph
 An empty graph can be constructed and updated.
 
 ```haskell
-let graph = (insertEdge 'A' 'B' 1 <<< insertVertex 'A' <<< insertVertex 'B') empty
-weight 'A' 'B' graph
--- Just 1
+(insertEdge 'A' 'B' 1 <<< insertVertex 'A' <<< insertVertex 'B') empty
+-- Graph
 ```
 
 ## API
