@@ -1,6 +1,8 @@
 module Data.Graph
   ( AdjacencyList
   , Graph
+  , empty
+  , isEmpty
   , fromAdjacencyList
   , vertices
   , size
@@ -25,7 +27,7 @@ import Data.Foldable (elem, foldl) as F
 import Data.List (List(..), (\\), (:))
 import Data.List (filter, reverse, singleton, snoc) as L
 import Data.Map (Map)
-import Data.Map (alter, delete, empty, insert, keys, lookup, member, singleton, size, toList, update) as M
+import Data.Map (alter, delete, empty, insert, isEmpty, keys, lookup, member, singleton, size, toList, update) as M
 import Data.Maybe (Maybe(..), maybe, fromJust)
 import Data.Newtype (class Newtype, wrap, unwrap, over)
 import Data.Set (Set)
@@ -38,7 +40,7 @@ import Data.PQueue (insert, isEmpty, singleton) as PQ
 import Data.PQueue.Partial (head, tail) as PPQ
 
 -- | `Graph a w` represents a graph of vertices of type `a` connected by edges
--- | with a weight of type `w`.
+-- | with a weight of type `w`. It is represented internally as a map of maps.
 newtype Graph a w = Graph (Map a (Map a w))
 
 -- | `AdjacencyList a w` represents a `List` of vertices of type `a` with a
@@ -59,6 +61,14 @@ insertEdge' a w (Just es) = Just $ M.insert a w es
 deleteEdge' :: forall a w. (Ord a) => a -> Maybe (Map a w) -> Maybe (Map a w)
 deleteEdge' a Nothing = Nothing
 deleteEdge' a (Just es) = Just $ M.delete a es
+
+-- | An empty graph.
+empty :: forall a w. (Ord a) => Graph a w
+empty = wrap M.empty
+
+-- | Test whether a graph is empty.
+isEmpty :: forall a w. (Ord a) => Graph a w -> Boolean
+isEmpty = M.isEmpty <<< unwrap
 
 -- | Create a graph from an adjacency list.
 fromAdjacencyList :: forall a w. (Ord a) => AdjacencyList a w -> Graph a w

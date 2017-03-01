@@ -4,12 +4,14 @@ import Prelude
 
 import Data.List (fromFoldable, (!!))
 import Data.Maybe (Maybe(..), fromJust)
+import Data.Map (empty, isEmpty) as M
+import Data.Newtype (wrap, unwrap)
 import Data.Tuple (Tuple(..))
 import Partial.Unsafe (unsafePartial)
 import Test.Spec (Spec, describe, it)
 import Test.Spec.Assertions (shouldEqual)
 
-import Data.Graph (adjacent, connectedComponents, deleteEdge, deleteVertex, elem, fromAdjacencyList, insertEdge, insertVertex, isAdjacent, shortestPath, size, traverse, vertices, weight)
+import Data.Graph (Graph, adjacent, connectedComponents, deleteEdge, deleteVertex, elem, empty, fromAdjacencyList, insertEdge, insertVertex, isAdjacent, isEmpty, shortestPath, size, traverse, vertices, weight)
 
 graphSpec :: forall r. (Spec r) Unit
 graphSpec = describe "Graph" do
@@ -24,6 +26,14 @@ graphSpec = describe "Graph" do
     ]
 
   let graph = fromAdjacencyList edges
+
+  describe "empty" do
+    it "returns an empty graph" do
+      M.isEmpty (unwrap $ empty :: Graph Int Int) `shouldEqual` true
+
+  describe "isEmpty" do
+    it "returns an empty graph" do
+      isEmpty (wrap M.empty :: Graph Int Int) `shouldEqual` true
 
   describe "vertices" do
     it "returns the vertices" do
