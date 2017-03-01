@@ -1,6 +1,8 @@
 module Data.Graph
   ( AdjacencyList
   , Graph
+  , empty
+  , isEmpty
   , fromAdjacencyList
   , vertices
   , size
@@ -13,17 +15,21 @@ module Data.Graph
   , shortestPath'
   , traverse
   , connectedComponents
+  , insertVertex
+  , insertEdge
+  , deleteVertex
+  , deleteEdge
   ) where
 
 import Prelude
 
 import Data.Foldable (elem, foldl) as F
-import Data.List (List(..), (\\))
+import Data.List (List(..), (\\), (:))
 import Data.List (filter, reverse, singleton, snoc) as L
 import Data.Map (Map)
-import Data.Map (alter, empty, insert, keys, lookup, member, singleton, size, toList) as M
+import Data.Map (alter, delete, empty, insert, isEmpty, keys, lookup, member, singleton, size, toList, update) as M
 import Data.Maybe (Maybe(..), maybe, fromJust)
-import Data.Newtype (class Newtype, wrap, unwrap)
+import Data.Newtype (class Newtype, wrap, unwrap, over)
 import Data.Set (Set)
 import Data.Set (empty, insert, member) as S
 import Data.Tuple (Tuple(..), fst, snd)
@@ -33,10 +39,8 @@ import Data.PQueue (PQueue)
 import Data.PQueue (insert, isEmpty, singleton) as PQ
 import Data.PQueue.Partial (head, tail) as PPQ
 
-infixr 6 Cons as :
-
 -- | `Graph a w` represents a graph of vertices of type `a` connected by edges
--- | with a weight of type `w`.
+-- | with a weight of type `w`. It is represented internally as a map of maps.
 newtype Graph a w = Graph (Map a (Map a w))
 
 -- | `AdjacencyList a w` represents a `List` of vertices of type `a` with a
@@ -47,6 +51,24 @@ derive instance newtypeGraph :: Newtype (Graph a w) _
 
 instance showGraph :: (Show a, Show w) => Show (Graph a w) where
   show = show <<< unwrap
+
+-- If there is a map then insert the value, otherwise create a new map.
+insertEdge' :: forall a w. (Ord a) => a -> w -> Maybe (Map a w) -> Maybe (Map a w)
+insertEdge' a w Nothing = Just $ M.singleton a w
+insertEdge' a w (Just es) = Just $ M.insert a w es
+
+-- If there is a map then delete the key, otherwise do nothing.
+deleteEdge' :: forall a w. (Ord a) => a -> Maybe (Map a w) -> Maybe (Map a w)
+deleteEdge' a Nothing = Nothing
+deleteEdge' a (Just es) = Just $ M.delete a es
+
+-- | An empty graph.
+empty :: forall a w. (Ord a) => Graph a w
+empty = wrap M.empty
+
+-- | Test whether a graph is empty.
+isEmpty :: forall a w. (Ord a) => Graph a w -> Boolean
+isEmpty = M.isEmpty <<< unwrap
 
 -- | Create a graph from an adjacency list.
 fromAdjacencyList :: forall a w. (Ord a) => AdjacencyList a w -> Graph a w
@@ -59,14 +81,7 @@ fromAdjacencyList as = wrap adjacencyMap
     adjacencyMap = F.foldl (flip insertVertex) emptyAdjacencyMap as
 
     insertVertex (Tuple a edges) m = F.foldl (flip $ insertEdge a) m edges
-
-    -- insertEdge a (Tuple b w) = M.alter (upsert a w) b <<< M.alter (upsert b w) a
-    insertEdge a (Tuple b w) = M.alter (upsert a w) b
-
-    -- If the map has no value then add a singleton map. Otherwise insert the
-    -- value into the existing map.
-    upsert a w Nothing = Just (M.singleton a w)
-    upsert a w (Just es) = Just (M.insert a w es)
+    insertEdge a (Tuple b w) = M.alter (insertEdge' b w) a
 
 -- | Get the vertices of a graph.
 vertices :: forall a w. Graph a w -> List a
@@ -166,3 +181,19 @@ connectedComponents g =
             as = map (\a -> Tuple a (adjacent' a g)) vs'
         in go (vs \\ vs') (L.snoc gs (fromAdjacencyList as))
   in go (vertices g) Nil
+
+-- | Insert a vertex into a graph.
+insertVertex :: forall a w. (Ord a) => a -> Graph a w -> Graph a w
+insertVertex vertex = over Graph $ M.insert vertex M.empty
+
+-- | Insert an edge into a graph.
+insertEdge :: forall a w. (Ord a) => a -> a -> w -> Graph a w -> Graph a w
+insertEdge from to w = over Graph $ M.alter (insertEdge' to w) from
+
+-- | Delete a vertex from a graph.
+deleteVertex :: forall a w. (Ord a) => a -> Graph a w -> Graph a w
+deleteVertex vertex = over Graph $ M.delete vertex
+
+-- | Delete an edge from a graph.
+deleteEdge :: forall a w. (Ord a) => a -> a -> Graph a w -> Graph a w
+deleteEdge from to = over Graph $ M.alter (deleteEdge' to) from
