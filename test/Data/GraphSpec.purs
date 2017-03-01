@@ -9,7 +9,7 @@ import Partial.Unsafe (unsafePartial)
 import Test.Spec (Spec, describe, it)
 import Test.Spec.Assertions (shouldEqual)
 
-import Data.Graph (adjacent, connectedComponents, elem, fromAdjacencyList, isAdjacent, shortestPath, size, traverse, vertices, weight)
+import Data.Graph (adjacent, connectedComponents, deleteEdge, deleteVertex, elem, fromAdjacencyList, insertEdge, insertVertex, isAdjacent, shortestPath, size, traverse, vertices, weight)
 
 graphSpec :: forall r. (Spec r) Unit
 graphSpec = describe "Graph" do
@@ -105,3 +105,28 @@ graphSpec = describe "Graph" do
       vertices (unsafePartial $ fromJust $ components !! 0) `shouldEqual` fromFoldable ['A', 'B', 'C', 'D']
       vertices (unsafePartial $ fromJust $ components !! 1) `shouldEqual` fromFoldable ['E', 'F']
       vertices (unsafePartial $ fromJust $ components !! 2) `shouldEqual` fromFoldable ['G']
+
+  describe "insertVertex" do
+    it "inserts a vertex into a graph" do
+      vertices (insertVertex 'H' graph) `shouldEqual` fromFoldable ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+
+  describe "insertEdge" do
+    it "inserts an edge into a graph" do
+      let graph' = insertEdge 'F' 'G' 5 graph
+      weight 'F' 'G' graph' `shouldEqual` Just 5
+
+  describe "deleteVertex" do
+    it "deletes a vertex from a graph" do
+      vertices (deleteVertex 'G' graph) `shouldEqual` fromFoldable ['A', 'B', 'C', 'D', 'E', 'F']
+
+    it "returns the graph unchanged if there is no matchin vertex" do
+      vertices (deleteVertex 'H' graph) `shouldEqual` fromFoldable ['A', 'B', 'C', 'D', 'E', 'F', 'G']
+
+  describe "deleteEdge" do
+    it "deletes an edge from a graph" do
+      let graph' = deleteEdge 'A' 'B' graph
+      isAdjacent 'A' 'B' graph' `shouldEqual` false
+
+    it "returns the graph unchanged if there is no matching edge" do
+      let graph' = deleteEdge 'F' 'G' graph
+      isAdjacent 'F' 'G' graph' `shouldEqual` false
