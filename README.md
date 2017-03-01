@@ -8,6 +8,8 @@ A directed graph library for PureScript.
 
 ![Graph](/images/graph.png)
 
+## Adjacency list
+
 The directed graph pictured above can be represented with an `AdjacencyList`.
 An adjacency list is a list of tuples that contain a vertex and a list of edges
 to its adjacent vertices. A `Graph` can be constructed from an `AdjacencyList`.
@@ -44,13 +46,31 @@ vertices graph
 -- ['A', 'B', 'C', 'D', 'E', 'F', 'G']
 ```
 
-### Adjacent vertices
+### Edges
+
+The `isAdjacent` function returns true if two vertices are connected by an edge.
+
+```haskell
+isAdjacent 'A' 'B' graph
+-- true
+```
+
+The `weight` function returns the weight of the edge between two vertices.
+
+```haskell
+weight 'A' 'B' graph
+-- Just 1
+```
 
 The `adjacent` function returns all vertices connected to a vertex by an edge.
+The `adjacent'` function will also include the weight of the edges.
 
 ```haskell
 adjacent 'A' graph
 -- ['B', 'C']
+
+adjacent' 'A' graph
+-- [Tuple 'B' 1, Tuple 'C' 2]
 ```
 
 ### Shortest path
@@ -76,6 +96,16 @@ path.
 ```haskell
 connectedComponents graph
 -- [Graph, Graph, Graph]
+```
+
+### Building
+
+An empty graph can be constructed and updated.
+
+```haskell
+let graph = (insertEdge 'A' 'B' 1 <<< insertVertex 'A' <<< insertVertex 'B') empty
+weight 'A' 'B' graph
+-- Just 1
 ```
 
 ## API
