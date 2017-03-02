@@ -27,7 +27,7 @@ import Data.Foldable (elem, foldl) as F
 import Data.List (List(..), (\\), (:))
 import Data.List (filter, reverse, singleton, snoc) as L
 import Data.Map (Map)
-import Data.Map (alter, delete, empty, insert, isEmpty, keys, lookup, member, singleton, size, toList, update) as M
+import Data.Map (alter, delete, empty, insert, isEmpty, keys, lookup, member, singleton, size, toList) as M
 import Data.Maybe (Maybe(..), maybe, fromJust)
 import Data.Newtype (class Newtype, wrap, unwrap, over)
 import Data.Set (Set)
@@ -52,15 +52,15 @@ derive instance newtypeGraph :: Newtype (Graph a w) _
 instance showGraph :: (Show a, Show w) => Show (Graph a w) where
   show = show <<< unwrap
 
--- If there is a map then insert the value, otherwise create a new map.
+-- If given a map then insert the value, otherwise do nothing.
 insertEdge' :: forall a w. (Ord a) => a -> w -> Maybe (Map a w) -> Maybe (Map a w)
-insertEdge' a w Nothing = Just $ M.singleton a w
 insertEdge' a w (Just es) = Just $ M.insert a w es
+insertEdge' a w Nothing = Nothing
 
--- If there is a map then delete the key, otherwise do nothing.
+-- If given a map then delete the key, otherwise do nothing.
 deleteEdge' :: forall a w. (Ord a) => a -> Maybe (Map a w) -> Maybe (Map a w)
-deleteEdge' a Nothing = Nothing
 deleteEdge' a (Just es) = Just $ M.delete a es
+deleteEdge' a Nothing = Nothing
 
 -- | An empty graph.
 empty :: forall a w. (Ord a) => Graph a w
@@ -72,16 +72,15 @@ isEmpty = M.isEmpty <<< unwrap
 
 -- | Create a graph from an adjacency list.
 fromAdjacencyList :: forall a w. (Ord a) => AdjacencyList a w -> Graph a w
-fromAdjacencyList as = wrap adjacencyMap
+fromAdjacencyList as = insertEdges $ insertVertices empty
   where
-    -- Create an empty adjacency map for the vertices.
-    emptyAdjacencyMap = F.foldl (\m (Tuple a _) -> M.insert a M.empty m) M.empty as
+    -- Unwrap the vertices from the adjacency list and insert them into the graph.
+    insertVertices g = F.foldl (\m (Tuple a _) -> insertVertex a m) g as
 
-    -- Calculates the adjacency map by mapping vertices to adjacent vertices.
-    adjacencyMap = F.foldl (flip insertVertex) emptyAdjacencyMap as
-
-    insertVertex (Tuple a edges) m = F.foldl (flip $ insertEdge a) m edges
-    insertEdge a (Tuple b w) = M.alter (insertEdge' b w) a
+    -- Unwrap the edges from the adjacency list and insert them into the graph.
+    insertEdges g = F.foldl unwrapEdges g as
+    unwrapEdges g (Tuple a edges) = F.foldl (flip $ unwrapEdge a) g edges
+    unwrapEdge a (Tuple b w) = insertEdge a b w
 
 -- | Get the vertices of a graph.
 vertices :: forall a w. Graph a w -> List a
