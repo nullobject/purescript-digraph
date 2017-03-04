@@ -2,6 +2,7 @@ module Test.Data.GraphSpec where
 
 import Prelude
 
+import Data.Array (elem) as A
 import Data.List (fromFoldable, (!!))
 import Data.Maybe (Maybe(..), fromJust)
 import Data.Map (empty, isEmpty) as M
@@ -11,7 +12,7 @@ import Partial.Unsafe (unsafePartial)
 import Test.Spec (Spec, describe, it)
 import Test.Spec.Assertions (shouldEqual)
 
-import Data.Graph (Graph, adjacent, connectedComponents, deleteEdge, deleteVertex, elem, empty, fromAdjacencyList, insertEdge, insertVertex, isAdjacent, isEmpty, shortestPath, size, traverse, vertices, weight)
+import Data.Graph (Graph, adjacent, connectedComponents, deleteEdge, deleteVertex, elem, empty, filter, fromAdjacencyList, insertEdge, insertVertex, isAdjacent, isEmpty, shortestPath, size, traverse, vertices, weight)
 
 graphSpec :: forall r. (Spec r) Unit
 graphSpec = describe "Graph" do
@@ -146,3 +147,8 @@ graphSpec = describe "Graph" do
     it "returns the graph unchanged if there is no matching edge" do
       let graph' = deleteEdge 'F' 'G' graph
       isAdjacent 'F' 'G' graph' `shouldEqual` false
+
+  describe "filter" do
+    it "removes matching vertices from the graph" do
+      let f vertex = A.elem vertex ['A', 'B', 'C']
+      vertices (filter f graph) `shouldEqual` fromFoldable ['D', 'E', 'F', 'G']

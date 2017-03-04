@@ -19,6 +19,7 @@ module Data.Graph
   , insertEdge
   , deleteVertex
   , deleteEdge
+  , filter
   ) where
 
 import Prelude
@@ -191,3 +192,8 @@ deleteVertex vertex = deleteVertex' <<< deleteIncidentEdges
 deleteEdge :: forall a w. (Ord a) => a -> a -> Graph a w -> Graph a w
 deleteEdge from to = over Graph $ M.alter deleteEdge' from
   where deleteEdge' = maybe Nothing (Just <<< M.delete to)
+
+-- | Remove the matching vertices from a graph.
+filter :: forall a w. (Ord a) => (a -> Boolean) -> Graph a w -> Graph a w
+filter f graph = F.foldl filterVertex graph (vertices graph)
+  where filterVertex g v = if f v then deleteVertex v g else g
