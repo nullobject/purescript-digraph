@@ -52,16 +52,6 @@ derive instance newtypeGraph :: Newtype (Graph a w) _
 instance showGraph :: (Show a, Show w) => Show (Graph a w) where
   show = show <<< unwrap
 
--- If given a map then insert the value, otherwise do nothing.
-insertEdge' :: forall a w. (Ord a) => a -> w -> Maybe (Map a w) -> Maybe (Map a w)
-insertEdge' a w (Just es) = Just $ M.insert a w es
-insertEdge' a w Nothing = Nothing
-
--- If given a map then delete the key, otherwise do nothing.
-deleteEdge' :: forall a w. (Ord a) => a -> Maybe (Map a w) -> Maybe (Map a w)
-deleteEdge' a (Just es) = Just $ M.delete a es
-deleteEdge' a Nothing = Nothing
-
 -- | An empty graph.
 empty :: forall a w. (Ord a) => Graph a w
 empty = wrap M.empty
@@ -187,12 +177,17 @@ insertVertex vertex = over Graph $ M.insert vertex M.empty
 
 -- | Insert an edge into a graph.
 insertEdge :: forall a w. (Ord a) => a -> a -> w -> Graph a w -> Graph a w
-insertEdge from to w = over Graph $ M.alter (insertEdge' to w) from
+insertEdge from to w = over Graph $ M.alter insertEdge' from
+  where insertEdge' = maybe Nothing (Just <<< M.insert to w)
 
 -- | Delete a vertex from a graph.
 deleteVertex :: forall a w. (Ord a) => a -> Graph a w -> Graph a w
-deleteVertex vertex = over Graph $ M.delete vertex
+deleteVertex vertex = deleteVertex' <<< deleteIncidentEdges
+  where
+    deleteVertex' = over Graph $ M.delete vertex
+    deleteIncidentEdges graph = F.foldl (\g v -> deleteEdge v vertex g) graph (adjacent vertex graph)
 
 -- | Delete an edge from a graph.
 deleteEdge :: forall a w. (Ord a) => a -> a -> Graph a w -> Graph a w
-deleteEdge from to = over Graph $ M.alter (deleteEdge' to) from
+deleteEdge from to = over Graph $ M.alter deleteEdge' from
+  where deleteEdge' = maybe Nothing (Just <<< M.delete to)

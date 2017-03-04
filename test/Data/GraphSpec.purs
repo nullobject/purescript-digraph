@@ -117,25 +117,31 @@ graphSpec = describe "Graph" do
       vertices (unsafePartial $ fromJust $ components !! 2) `shouldEqual` fromFoldable ['G']
 
   describe "insertVertex" do
-    it "inserts a vertex into a graph" do
+    it "inserts a vertex into the graph" do
       vertices (insertVertex 'H' graph) `shouldEqual` fromFoldable ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
 
   describe "insertEdge" do
-    it "inserts an edge into a graph" do
+    it "inserts an edge into the graph" do
       let graph' = insertEdge 'F' 'G' 5 graph
       weight 'F' 'G' graph' `shouldEqual` Just 5
 
   describe "deleteVertex" do
-    it "deletes a vertex from a graph" do
-      vertices (deleteVertex 'G' graph) `shouldEqual` fromFoldable ['A', 'B', 'C', 'D', 'E', 'F']
+    it "deletes a vertex from the graph" do
+      vertices (deleteVertex 'A' graph) `shouldEqual` fromFoldable ['B', 'C', 'D', 'E', 'F', 'G']
 
-    it "returns the graph unchanged if there is no matchin vertex" do
+    it "returns the graph unchanged if there is no matching vertex" do
       vertices (deleteVertex 'H' graph) `shouldEqual` fromFoldable ['A', 'B', 'C', 'D', 'E', 'F', 'G']
 
+    it "deletes the edges incident on a vertex from the graph" do
+      let graph' = deleteVertex 'A' graph
+      isAdjacent 'A' 'B' graph' `shouldEqual` false
+      isAdjacent 'B' 'A' graph' `shouldEqual` false
+
   describe "deleteEdge" do
-    it "deletes an edge from a graph" do
+    it "deletes an edge from the graph" do
       let graph' = deleteEdge 'A' 'B' graph
       isAdjacent 'A' 'B' graph' `shouldEqual` false
+      isAdjacent 'B' 'A' graph' `shouldEqual` true
 
     it "returns the graph unchanged if there is no matching edge" do
       let graph' = deleteEdge 'F' 'G' graph
