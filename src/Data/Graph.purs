@@ -136,7 +136,7 @@ shortestPath' p start g = go (PQ.singleton zero start) S.empty (M.singleton star
              in go fringe'' visited' labels' edges'
 
     successorsAndCosts :: a -> w -> List (Tuple a w)
-    successorsAndCosts va cost = map (\(Tuple va c) -> Tuple va (cost + c)) (adjacent' va g)
+    successorsAndCosts va cost = map (\(Tuple v c) -> Tuple v (cost + c)) (adjacent' va g)
 
     findPath :: a -> Map a a -> List a
     findPath vertex edges
