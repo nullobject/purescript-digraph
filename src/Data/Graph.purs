@@ -27,7 +27,7 @@ import Data.Foldable (elem, foldl) as F
 import Data.List (List(..), (\\), (:))
 import Data.List (filter, reverse, singleton, snoc) as L
 import Data.Map (Map)
-import Data.Map (alter, delete, empty, insert, isEmpty, keys, lookup, member, singleton, size, toList) as M
+import Data.Map (alter, delete, empty, insert, isEmpty, keys, lookup, member, singleton, size, toAscUnfoldable) as M
 import Data.Maybe (Maybe(..), maybe, fromJust)
 import Data.Newtype (class Newtype, wrap, unwrap, over)
 import Data.Set (Set)
@@ -57,11 +57,11 @@ empty :: forall a w. (Ord a) => Graph a w
 empty = wrap M.empty
 
 -- | Test whether a graph is empty.
-isEmpty :: forall a w. (Ord a) => Graph a w -> Boolean
+isEmpty :: forall a w. Ord a => Graph a w -> Boolean
 isEmpty = M.isEmpty <<< unwrap
 
 -- | Create a graph from an adjacency list.
-fromAdjacencyList :: forall a w. (Ord a) => AdjacencyList a w -> Graph a w
+fromAdjacencyList :: forall a w. Ord a => AdjacencyList a w -> Graph a w
 fromAdjacencyList as = insertEdges $ insertVertices empty
   where
     -- Unwrap the vertices from the adjacency list and insert them into the graph.
@@ -81,35 +81,35 @@ size :: forall a w. Graph a w -> Int
 size = M.size <<< unwrap
 
 -- | Test whether a vertex is in a graph.
-elem :: forall a w. (Ord a) => a -> Graph a w -> Boolean
+elem :: forall a w. Ord a => a -> Graph a w -> Boolean
 elem vertex = M.member vertex <<< unwrap
 
 -- | Get the adjacent vertices of a vertex.
-adjacent :: forall a w. (Ord a) => a -> Graph a w -> List a
+adjacent :: forall a w. Ord a => a -> Graph a w -> List a
 adjacent vertex graph = maybe Nil M.keys (M.lookup vertex (unwrap graph))
 
 -- | Get the adjacent vertices and associated costs of a vertex.
-adjacent' :: forall a w. (Ord a) => a -> Graph a w -> List (Tuple a w)
-adjacent' vertex graph = maybe Nil M.toList (M.lookup vertex (unwrap graph))
+adjacent' :: forall a w. Ord a => a -> Graph a w -> List (Tuple a w)
+adjacent' vertex graph = maybe Nil M.toAscUnfoldable (M.lookup vertex (unwrap graph))
 
 -- | Test whether two vertices are adjacent in a graph.
-isAdjacent :: forall a w. (Ord a) => a -> a -> Graph a w -> Boolean
+isAdjacent :: forall a w. Ord a => a -> a -> Graph a w -> Boolean
 isAdjacent a b graph = maybe false (M.member b) (M.lookup a (unwrap graph))
 
 -- | Get the weight of the edge between two vertices. Returns `Nothing` if no
 -- | edge exists between the vertices.
-weight :: forall a w. (Ord a) => a -> a -> Graph a w -> Maybe w
+weight :: forall a w. Ord a => a -> a -> Graph a w -> Maybe w
 weight from to graph = maybe Nothing (M.lookup to) (M.lookup from (unwrap graph))
 
 -- | Get the shortest path between two vertices. Returns `Nothing` if no path
 -- | exists between the vertices.
-shortestPath :: forall a w. (Ord a, Ord w, Semiring w) => a -> a -> Graph a w -> Maybe (List a)
+shortestPath :: forall a w. Ord a => Ord w => Semiring w => a -> a -> Graph a w -> Maybe (List a)
 shortestPath from to = shortestPath' (_ == to) from
 
 -- | Get the shortest path from a starting vertex to a vertex that satisifes a
 -- | predicate function. Returns `Nothing` if no path exists between the
 -- | vertices.
-shortestPath' :: forall a w. (Ord a, Ord w, Semiring w) => (a -> Boolean) -> a -> Graph a w -> Maybe (List a)
+shortestPath' :: forall a w. Ord a => Ord w => Semiring w => (a -> Boolean) -> a -> Graph a w -> Maybe (List a)
 shortestPath' p start g = go (PQ.singleton zero start) S.empty (M.singleton start zero) M.empty
   where
     go :: PQueue w a     -- priority queue of fringe vertices
@@ -136,7 +136,7 @@ shortestPath' p start g = go (PQ.singleton zero start) S.empty (M.singleton star
              in go fringe'' visited' labels' edges'
 
     successorsAndCosts :: a -> w -> List (Tuple a w)
-    successorsAndCosts v cost = map (\(Tuple v c) -> Tuple v (cost + c)) (adjacent' v g)
+    successorsAndCosts va cost = map (\(Tuple va c) -> Tuple va (cost + c)) (adjacent' va g)
 
     findPath :: a -> Map a a -> List a
     findPath vertex edges
@@ -150,7 +150,7 @@ shortestPath' p start g = go (PQ.singleton zero start) S.empty (M.singleton star
 
 -- | Perform a depth-frist traversal of a graph from a starting vertex.
 -- | Returns a `List` of the visited vertices.
-traverse :: forall a w. (Ord a) => a -> Graph a w -> List a
+traverse :: forall a w. Ord a => a -> Graph a w -> List a
 traverse from g
   | elem from g =
     let go Nil path = path
@@ -162,7 +162,7 @@ traverse from g
 
 -- | Get the strongly connected components of a graph. Returns a `List` of
 -- | connected subgraphs.
-connectedComponents :: forall a w. (Ord a) => Graph a w -> List (Graph a w)
+connectedComponents :: forall a w. Ord a => Graph a w -> List (Graph a w)
 connectedComponents g =
   let go Nil gs = gs
       go (v:vs) gs =
@@ -172,22 +172,22 @@ connectedComponents g =
   in go (vertices g) Nil
 
 -- | Insert a vertex into a graph.
-insertVertex :: forall a w. (Ord a) => a -> Graph a w -> Graph a w
+insertVertex :: forall a w. Ord a => a -> Graph a w -> Graph a w
 insertVertex vertex = over Graph $ M.insert vertex M.empty
 
 -- | Insert an edge into a graph.
-insertEdge :: forall a w. (Ord a) => a -> a -> w -> Graph a w -> Graph a w
+insertEdge :: forall a w. Ord a => a -> a -> w -> Graph a w -> Graph a w
 insertEdge from to w = over Graph $ M.alter insertEdge' from
   where insertEdge' = maybe Nothing (Just <<< M.insert to w)
 
 -- | Delete a vertex from a graph.
-deleteVertex :: forall a w. (Ord a) => a -> Graph a w -> Graph a w
+deleteVertex :: forall a w. Ord a => a -> Graph a w -> Graph a w
 deleteVertex vertex = deleteVertex' <<< deleteIncidentEdges
   where
     deleteVertex' = over Graph $ M.delete vertex
     deleteIncidentEdges graph = F.foldl (\g v -> deleteEdge v vertex g) graph (adjacent vertex graph)
 
 -- | Delete an edge from a graph.
-deleteEdge :: forall a w. (Ord a) => a -> a -> Graph a w -> Graph a w
+deleteEdge :: forall a w. Ord a => a -> a -> Graph a w -> Graph a w
 deleteEdge from to = over Graph $ M.alter deleteEdge' from
   where deleteEdge' = maybe Nothing (Just <<< M.delete to)
