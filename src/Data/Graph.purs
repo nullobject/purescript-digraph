@@ -27,7 +27,7 @@ import Data.Foldable (elem, foldl) as F
 import Data.List (List(..), (\\), (:))
 import Data.List (filter, reverse, singleton, snoc) as L
 import Data.Map (Map)
-import Data.Map (alter, delete, empty, insert, isEmpty, keys, lookup, member, singleton, size, toList) as M
+import Data.Map (alter, delete, empty, insert, isEmpty, keys, lookup, member, singleton, size, toUnfoldable) as M
 import Data.Maybe (Maybe(..), maybe, fromJust)
 import Data.Newtype (class Newtype, wrap, unwrap, over)
 import Data.Set (Set)
@@ -90,7 +90,7 @@ adjacent vertex graph = maybe Nil M.keys (M.lookup vertex (unwrap graph))
 
 -- | Get the adjacent vertices and associated costs of a vertex.
 adjacent' :: forall a w. (Ord a) => a -> Graph a w -> List (Tuple a w)
-adjacent' vertex graph = maybe Nil M.toList (M.lookup vertex (unwrap graph))
+adjacent' vertex graph = maybe Nil M.toUnfoldable (M.lookup vertex (unwrap graph))
 
 -- | Test whether two vertices are adjacent in a graph.
 isAdjacent :: forall a w. (Ord a) => a -> a -> Graph a w -> Boolean
@@ -103,13 +103,13 @@ weight from to graph = maybe Nothing (M.lookup to) (M.lookup from (unwrap graph)
 
 -- | Get the shortest path between two vertices. Returns `Nothing` if no path
 -- | exists between the vertices.
-shortestPath :: forall a w. (Ord a, Ord w, Semiring w) => a -> a -> Graph a w -> Maybe (List a)
+shortestPath :: forall a w. Ord a => Ord w => Semiring w => a -> a -> Graph a w -> Maybe (List a)
 shortestPath from to = shortestPath' (_ == to) from
 
 -- | Get the shortest path from a starting vertex to a vertex that satisifes a
 -- | predicate function. Returns `Nothing` if no path exists between the
 -- | vertices.
-shortestPath' :: forall a w. (Ord a, Ord w, Semiring w) => (a -> Boolean) -> a -> Graph a w -> Maybe (List a)
+shortestPath' :: forall a w. Ord a => Ord w => Semiring w => (a -> Boolean) -> a -> Graph a w -> Maybe (List a)
 shortestPath' p start g = go (PQ.singleton zero start) S.empty (M.singleton start zero) M.empty
   where
     go :: PQueue w a     -- priority queue of fringe vertices
