@@ -5,11 +5,12 @@ cache:
   apt: true
   directories:
     - $HOME/.cache/bower
+env:
+  - PATH=$HOME/purescript:$PATH
 install:
-  - mkdir -p ~/bin
   - export TAG=$(wget -q -O - https://github.com/purescript/purescript/releases/latest --server-response --max-redirect 0 2>&1 | sed -n -e 's/.*Location:.*tag\///p')
-  - travis_retry curl -L https://github.com/purescript/purescript/releases/download/$TAG/linux64.tar.gz | tar -xz -C ~/bin --wildcards '*/psc*' --strip-components=1
-  - chmod -R a+x ~/bin
+  - travis_retry curl -L https://github.com/purescript/purescript/releases/download/$TAG/linux64.tar.gz | tar -xz -C $HOME
+  - chmod a+x $HOME/purescript
   - npm install -g bower pulp
   - bower install
 script:
