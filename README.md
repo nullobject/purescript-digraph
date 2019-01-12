@@ -1,6 +1,6 @@
 # purescript-digraph
 
-[![Build Status](https://travis-ci.org/nullobject/purescript-digraph.svg?branch=master)](https://travis-ci.org/nullobject/purescript-digraph)
+[![Build Status](https://travis-ci.com/nullobject/purescript-digraph.svg?branch=master)](https://travis-ci.com/nullobject/purescript-digraph)
 
 A directed graph library for PureScript.
 
