@@ -24,9 +24,8 @@ module Data.Graph
 
 import Prelude
 
-import Data.Foldable (elem, foldl) as F
 import Data.List (List(..), (\\), (:))
-import Data.List (filter, reverse, singleton, snoc) as L
+import Data.List (elem, filter, foldl, reverse, singleton, snoc) as L
 import Data.Map (Map)
 import Data.Map (alter, delete, empty, insert, isEmpty, keys, lookup, member, singleton, size, toUnfoldableUnordered) as M
 import Data.Maybe (Maybe(..), maybe, fromJust)
@@ -66,11 +65,11 @@ fromAdjacencyList :: forall a w. Ord a => AdjacencyList a w -> Graph a w
 fromAdjacencyList as = insertEdges $ insertVertices empty
   where
     -- Unwrap the vertices from the adjacency list and insert them into the graph.
-    insertVertices g = F.foldl (\m (Tuple a _) -> insertVertex a m) g as
+    insertVertices g = L.foldl (\m (Tuple a _) -> insertVertex a m) g as
 
     -- Unwrap the edges from the adjacency list and insert them into the graph.
-    insertEdges g = F.foldl unwrapEdges g as
-    unwrapEdges g (Tuple a edges) = F.foldl (flip $ unwrapEdge a) g edges
+    insertEdges g = L.foldl unwrapEdges g as
+    unwrapEdges g (Tuple a edges) = L.foldl (flip $ unwrapEdge a) g edges
     unwrapEdge a (Tuple b w) = insertEdge a b w
 
 -- | Get the vertices of a graph.
@@ -126,14 +125,14 @@ shortestPath' p start g = go (PQ.singleton zero start) S.empty (M.singleton star
             vertex = snd smallest
             fringe' = unsafePartial $ PPQ.tail fringe
             visited' = S.insert vertex visited
-            labels' = F.foldl (\a (Tuple v c) -> M.insert v c a) labels successors
+            labels' = L.foldl (\a (Tuple v c) -> M.insert v c a) labels successors
             successors = L.filter isSuccessor $ successorsAndCosts vertex cost
             isSuccessor (Tuple v c) = not (S.member v visited') && ((not (M.member v labels)) || c < (lookup' v labels))
         in if p vertex then Just $ findPath vertex edges
            else if S.member vertex visited then go fringe' visited labels edges
            else
-             let fringe'' = F.foldl (\a (Tuple v c) -> PQ.insert c v a) fringe' successors
-                 edges' = F.foldl (\a (Tuple v _) -> M.insert v vertex a) edges successors
+             let fringe'' = L.foldl (\a (Tuple v c) -> PQ.insert c v a) fringe' successors
+                 edges' = L.foldl (\a (Tuple v _) -> M.insert v vertex a) edges successors
              in go fringe'' visited' labels' edges'
 
     successorsAndCosts :: a -> w -> List (Tuple a w)
@@ -156,7 +155,7 @@ traverse from g
   | elem from g =
     let go Nil path = path
         go (v:vs) path
-          | F.elem v path = go vs path
+          | L.elem v path = go vs path
           | otherwise = go (adjacent v g <> vs) (v:path)
     in L.reverse $ go (L.singleton from) Nil
   | otherwise = Nil
@@ -186,7 +185,7 @@ deleteVertex :: forall a w. Ord a => a -> Graph a w -> Graph a w
 deleteVertex vertex = deleteVertex' <<< deleteIncidentEdges
   where
     deleteVertex' = over Graph $ M.delete vertex
-    deleteIncidentEdges graph = F.foldl (\g v -> deleteEdge v vertex g) graph (adjacent vertex graph)
+    deleteIncidentEdges graph = L.foldl (\g v -> deleteEdge v vertex g) graph (adjacent vertex graph)
 
 -- | Delete an edge from a graph.
 deleteEdge :: forall a w. Ord a => a -> a -> Graph a w -> Graph a w
@@ -195,5 +194,5 @@ deleteEdge from to = over Graph $ M.alter deleteEdge' from
 
 -- | Remove the matching vertices from a graph.
 filter :: forall a w. (Ord a) => (a -> Boolean) -> Graph a w -> Graph a w
-filter f graph = F.foldl filterVertex graph (vertices graph)
+filter f graph = L.foldl filterVertex graph (vertices graph)
   where filterVertex g v = if f v then deleteVertex v g else g
