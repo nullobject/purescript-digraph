@@ -12,7 +12,7 @@ import Partial.Unsafe (unsafePartial)
 import Test.Spec (Spec, describe, it)
 import Test.Spec.Assertions (shouldEqual)
 
-import Data.Graph (Graph, adjacent, connectedComponents, deleteEdge, deleteVertex, elem, empty, filter, fromAdjacencyList, insertEdge, insertVertex, isAdjacent, isEmpty, shortestPath, size, traverse, vertices, weight)
+import Data.Graph
 
 graphSpec :: Spec Unit
 graphSpec = describe "Graph" do

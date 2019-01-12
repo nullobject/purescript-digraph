@@ -52,7 +52,7 @@ derive instance newtypeGraph :: Newtype (Graph a w) _
 instance showGraph :: (Show a, Show w) => Show (Graph a w) where
   show = show <<< unwrap
 
--- | An empty graph.
+-- | Create an empty graph.
 empty :: forall a w. (Ord a) => Graph a w
 empty = wrap M.empty
 
@@ -109,6 +109,8 @@ shortestPath from to = shortestPath' (_ == to) from
 -- | Get the shortest path from a starting vertex to a vertex that satisifes a
 -- | predicate function. Returns `Nothing` if no path exists between the
 -- | vertices.
+-- |
+-- | The shortest path is calculated using Dijkstra's algorithm.
 shortestPath' :: forall a w. Ord a => Ord w => Semiring w => (a -> Boolean) -> a -> Graph a w -> Maybe (List a)
 shortestPath' p start g = go (PQ.singleton zero start) S.empty (M.singleton start zero) M.empty
   where
@@ -117,7 +119,7 @@ shortestPath' p start g = go (PQ.singleton zero start) S.empty (M.singleton star
        -> Map a w        -- map from vertices to costs
        -> Map a a        -- map from vertices to adjacent vertices
        -> Maybe (List a) -- shortest path
-    go fringe visited labels edges =
+    go fringe visited costs edges =
       if PQ.isEmpty fringe then Nothing
       else
         let smallest = unsafePartial $ PPQ.head fringe
@@ -125,18 +127,19 @@ shortestPath' p start g = go (PQ.singleton zero start) S.empty (M.singleton star
             vertex = snd smallest
             fringe' = unsafePartial $ PPQ.tail fringe
             visited' = S.insert vertex visited
-            labels' = L.foldl (\a (Tuple v c) -> M.insert v c a) labels successors
+            costs' = L.foldl (\a (Tuple v c) -> M.insert v c a) costs successors
             successors = L.filter isSuccessor $ successorsAndCosts vertex cost
-            isSuccessor (Tuple v c) = not (S.member v visited') && ((not (M.member v labels)) || c < (lookup' v labels))
+            isSuccessor (Tuple v c) = not (S.member v visited') && ((not (M.member v costs)) || c < (lookup' v costs))
         in if p vertex then Just $ findPath vertex edges
-           else if S.member vertex visited then go fringe' visited labels edges
+           else if S.member vertex visited then go fringe' visited costs edges
            else
              let fringe'' = L.foldl (\a (Tuple v c) -> PQ.insert c v a) fringe' successors
                  edges' = L.foldl (\a (Tuple v _) -> M.insert v vertex a) edges successors
-             in go fringe'' visited' labels' edges'
+             in go fringe'' visited' costs' edges'
 
+    -- Calculates the vertices adjacent to the given vertex, with their total costs.
     successorsAndCosts :: a -> w -> List (Tuple a w)
-    successorsAndCosts va cost = map (\(Tuple v c) -> Tuple v (cost + c)) (adjacent' va g)
+    successorsAndCosts a cost = map (\(Tuple b c) -> Tuple b (cost + c)) (adjacent' a g)
 
     findPath :: a -> Map a a -> List a
     findPath vertex edges
