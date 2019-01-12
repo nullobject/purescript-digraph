@@ -28,11 +28,11 @@ import Data.Foldable (elem, foldl) as F
 import Data.List (List(..), (\\), (:))
 import Data.List (filter, reverse, singleton, snoc) as L
 import Data.Map (Map)
-import Data.Map (alter, delete, empty, insert, isEmpty, keys, lookup, member, singleton, size, toAscUnfoldable) as M
+import Data.Map (alter, delete, empty, insert, isEmpty, keys, lookup, member, singleton, size, toUnfoldableUnordered) as M
 import Data.Maybe (Maybe(..), maybe, fromJust)
 import Data.Newtype (class Newtype, wrap, unwrap, over)
 import Data.Set (Set)
-import Data.Set (empty, insert, member) as S
+import Data.Set (empty, insert, member, toUnfoldable) as S
 import Data.Tuple (Tuple(..), fst, snd)
 import Partial.Unsafe (unsafePartial)
 
@@ -75,7 +75,7 @@ fromAdjacencyList as = insertEdges $ insertVertices empty
 
 -- | Get the vertices of a graph.
 vertices :: forall a w. Graph a w -> List a
-vertices = M.keys <<< unwrap
+vertices = S.toUnfoldable <<< M.keys <<< unwrap
 
 -- | Get the number of vertices in a graph.
 size :: forall a w. Graph a w -> Int
@@ -87,11 +87,11 @@ elem vertex = M.member vertex <<< unwrap
 
 -- | Get the adjacent vertices of a vertex.
 adjacent :: forall a w. Ord a => a -> Graph a w -> List a
-adjacent vertex graph = maybe Nil M.keys (M.lookup vertex (unwrap graph))
+adjacent vertex graph = maybe Nil (S.toUnfoldable <<< M.keys) (M.lookup vertex (unwrap graph))
 
 -- | Get the adjacent vertices and associated costs of a vertex.
 adjacent' :: forall a w. Ord a => a -> Graph a w -> List (Tuple a w)
-adjacent' vertex graph = maybe Nil M.toAscUnfoldable (M.lookup vertex (unwrap graph))
+adjacent' vertex graph = maybe Nil M.toUnfoldableUnordered (M.lookup vertex (unwrap graph))
 
 -- | Test whether two vertices are adjacent in a graph.
 isAdjacent :: forall a w. Ord a => a -> a -> Graph a w -> Boolean

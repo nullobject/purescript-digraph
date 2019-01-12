@@ -2,11 +2,11 @@ module Test.Main where
 
 import Prelude
 
-import Control.Monad.Eff (Eff)
-import Test.Spec.Runner (RunnerEffects, run)
+import Effect (Effect)
+import Test.Spec.Runner (run)
 import Test.Spec.Reporter.Console (consoleReporter)
 
 import Test.Data.GraphSpec (graphSpec)
 
-main :: Eff (RunnerEffects ()) Unit
+main :: Effect Unit
 main = run [consoleReporter] graphSpec

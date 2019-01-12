@@ -14,7 +14,7 @@ import Test.Spec.Assertions (shouldEqual)
 
 import Data.Graph (Graph, adjacent, connectedComponents, deleteEdge, deleteVertex, elem, empty, filter, fromAdjacencyList, insertEdge, insertVertex, isAdjacent, isEmpty, shortestPath, size, traverse, vertices, weight)
 
-graphSpec :: forall r. (Spec r) Unit
+graphSpec :: Spec Unit
 graphSpec = describe "Graph" do
   let edges = fromFoldable $
     [ Tuple 'A' (fromFoldable [Tuple 'B' 1, Tuple 'C' 2])
